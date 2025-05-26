@@ -25,7 +25,7 @@
             </p>
             
             <div class="w-full h-48 bg-gray-700 rounded-lg flex items-center justify-center mb-6 overflow-hidden border-2 border-gray-600">
-                <img src="https://placehold.co/400x200/374151/D1D5DB?text=صورة+CS2+Prime" alt="صورة CS2 Prime" class="object-cover w-full h-full rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/400x200/374151/D1D5DB?text=خطأ+في+تحميل+الصورة';">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Counter-Strike_2_logo.svg/1200px-Counter-Strike_2_logo.svg.png" alt="صورة للعبة Counter-Strike 2" class="object-cover w-full h-full rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/400x200/374151/D1D5DB?text=خطأ+في+تحميل+الصورة';">
             </div>
 
             <div class="bg-gray-900 rounded-lg p-4 sm:p-6 mb-8 border border-gray-700">
@@ -40,13 +40,87 @@
                 </p>
             </div>
 
-            <a href="https://www.facebook.com/mi.nou.588592" target="_blank" rel="noopener noreferrer" class="w-full inline-block bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-500 focus:ring-opacity-50">
+            <a href="https://www.facebook.com/mi.nou.588592" target="_blank" rel="noopener noreferrer" class="w-full inline-block bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-500 focus:ring-opacity-50 mb-4">
                 اشترِ الآن!
             </a>
+
+            <button id="generateDescriptionBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 mt-2">
+                ✨ اعرف المزيد عن CS2 Prime
+            </button>
+
+            <div id="loadingIndicator" class="text-gray-400 mt-4 hidden">
+                جاري التحميل...
+            </div>
+
+            <div id="llmContent" class="bg-gray-700 text-gray-200 p-4 rounded-lg mt-6 text-sm text-right hidden">
+                </div>
+
             <p class="text-gray-500 text-sm mt-4">
                 العرض سارٍ لفترة محدودة.
             </p>
         </div>
     </div>
+
+    <script>
+        // Get references to the button, loading indicator, and content display area
+        const generateDescriptionBtn = document.getElementById('generateDescriptionBtn');
+        const llmContentDiv = document.getElementById('llmContent');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Add an event listener to the "Learn More" button
+        generateDescriptionBtn.addEventListener('click', async () => {
+            // Hide previous content and show loading indicator
+            llmContentDiv.classList.add('hidden'); 
+            loadingIndicator.classList.remove('hidden'); 
+            llmContentDiv.innerHTML = ''; // Clear any previously generated content
+
+            try {
+                // Initialize chat history for the Gemini API call
+                let chatHistory = [];
+                // Define the prompt for the LLM in Arabic
+                const prompt = "Provide a concise and engaging description of CS2 Prime, highlighting its benefits for gamers. Write it in Arabic.";
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                
+                // Construct the payload for the Gemini API request
+                const payload = { contents: chatHistory };
+                // API key will be provided by the Canvas environment at runtime
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                // Make the fetch call to the Gemini API
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Parse the JSON response
+                const result = await response.json();
+
+                // Check if the response contains valid content
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    // Extract the generated text
+                    const text = result.candidates[0].content.parts[0].text;
+                    // Display the text in the designated div
+                    llmContentDiv.innerHTML = text;
+                    llmContentDiv.classList.remove('hidden'); // Show the content div
+                } else {
+                    // Handle cases where no content is returned
+                    llmContentDiv.innerHTML = 'تعذر الحصول على وصف. يرجى المحاولة مرة أخرى.';
+                    llmContentDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                // Log and display any errors during the API call
+                console.error('Error calling Gemini API:', error);
+                llmContentDiv.innerHTML = 'حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى.';
+                llmContentDiv.classList.remove('hidden');
+            } finally {
+                // Hide the loading indicator once the process is complete (success or failure)
+                loadingIndicator.classList.add('hidden'); 
+            }
+        });
+    </script>
 </body>
 </html>
